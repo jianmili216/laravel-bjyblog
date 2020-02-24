@@ -143,7 +143,7 @@ class ComposerServiceProvider extends ServiceProvider
                     $query->where('is_admin', 0);
                 })
                 ->has('article')
-                ->orderBy('created_at', 'desc')
+                ->orderByDesc('created_at')
                 ->limit(17)
                 ->get()
                 ->each(function ($comment) {

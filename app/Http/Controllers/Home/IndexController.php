@@ -70,8 +70,15 @@ class IndexController extends Controller
             ->limit(1)
             ->first();
 
-        // 获取评论
-        $comment     = $commentModel->getDataByArticleId($article->id);
+        $comments = Comment::where('article_id', $article->id)
+            ->with('socialiteUser', 'parentComment', 'parentComment.socialiteUser')
+            ->when(Str::isTrue(config('bjyblog.comment_audit')), function ($query) {
+                return $query->where('is_audited', 1);
+            })
+            ->orderByDesc('created_at')
+            ->get()
+            ->toTree();
+
         $category_id = $article->category->id;
 
         /** @var \App\Models\SocialiteUser $socialiteUser */
@@ -84,7 +91,7 @@ class IndexController extends Controller
         }
 
         $likes       = $article->likers()->get();
-        $assign      = compact('category_id', 'article', 'prev', 'next', 'comment', 'is_liked', 'likes');
+        $assign      = compact('category_id', 'article', 'prev', 'next', 'comments', 'is_liked', 'likes');
 
         return view('home.index.article', $assign);
     }
